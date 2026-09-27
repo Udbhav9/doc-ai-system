@@ -1,27 +1,31 @@
 import numpy as np
-from paddleocr import PaddleOCR
+import easyocr
 
 class LocalOCREngine:
     def __init__(self):
-        # Clean initialization compatible with paddlepaddle 2.5.2
-        self.ocr = PaddleOCR(use_angle_cls=True, lang='en')
+        # Initialize EasyOCR for English running on CPU
+        self.reader = easyocr.Reader(['en'], gpu=False)
 
     def extract_text_and_boxes(self, img_np: np.ndarray) -> dict:
-        """Executes explicit OCR detection and recognition."""
-        result = self.ocr.ocr(img_np, cls=True)
+        """Executes explicit OCR detection and recognition using PyTorch/EasyOCR."""
+        # easyocr expects RGB image or image path
+        results = self.reader.readtext(img_np)
         
         extracted_lines = []
         bounding_boxes = []
         confidence_scores = []
 
-        if result and result[0]:
-            for line in result[0]:
-                box = line[0]
-                text, conf = line[1][0], line[1][1]
-                
-                extracted_lines.append(text)
-                bounding_boxes.append({"text": text, "box": box, "confidence": round(float(conf), 2)})
-                confidence_scores.append(conf)
+        for bbox, text, conf in results:
+            # bbox is a list of 4 points [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+            box = [[int(pt[0]), int(pt[1])] for pt in bbox]
+            
+            extracted_lines.append(text)
+            bounding_boxes.append({
+                "text": text, 
+                "box": box, 
+                "confidence": round(float(conf), 2)
+            })
+            confidence_scores.append(float(conf))
 
         avg_confidence = float(np.mean(confidence_scores)) if confidence_scores else 0.0
         full_text = "\n".join(extracted_lines)
