@@ -3,8 +3,8 @@ from paddleocr import PaddleOCR
 
 class LocalOCREngine:
     def __init__(self):
-        # Initialize PaddleOCR (Runs on CPU/GPU locally)
-        self.ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+        # Initialize PaddleOCR (removed deprecated show_log parameter)
+        self.ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
     def extract_text_and_boxes(self, img_np: np.ndarray) -> dict:
         """Executes explicit OCR detection and recognition."""
