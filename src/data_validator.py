@@ -1,6 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+class LineItemSchema(BaseModel):
+    description: str = Field(default="Item")
+    quantity: float = Field(default=1.0)
+    unit_price: float = Field(default=0.0)
+    total: float = Field(default=0.0)
+
 class ExtractedDocumentSchema(BaseModel):
     document_number: Optional[str] = None
     date: Optional[str] = None
@@ -9,6 +15,7 @@ class ExtractedDocumentSchema(BaseModel):
     tax_amount: float = Field(default=0.0)
     total_amount: float = Field(default=0.0)
     confidence_score: float = Field(default=1.0)
+    line_items: List[LineItemSchema] = Field(default_factory=list)
 
 def validate_extraction(data: dict) -> tuple[bool, List[str], ExtractedDocumentSchema]:
     """Validates raw dict using Pydantic and applies mathematical audit rules."""
@@ -25,10 +32,10 @@ def validate_extraction(data: dict) -> tuple[bool, List[str], ExtractedDocumentS
         actual_total = round(validated_obj.total_amount, 2)
 
         if abs(expected_total - actual_total) > 0.05:
-            warnings.append(f"Math Failure: Subtotal ({validated_obj.subtotal}) + Tax ({validated_obj.tax_amount}) = {expected_total}, but Total is {actual_total}")
+            warnings.append(f"Math Audit Failure: Subtotal ({validated_obj.subtotal}) + Tax ({validated_obj.tax_amount}) = {expected_total}, but Total is {actual_total}")
 
     if not validated_obj.document_number:
-        warnings.append("Missing Document Number.")
+        warnings.append("Missing Document/Invoice Number.")
 
     is_valid = len(warnings) == 0
     return is_valid, warnings, validated_obj
