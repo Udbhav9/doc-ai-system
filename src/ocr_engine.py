@@ -3,7 +3,7 @@ from paddleocr import PaddleOCR
 
 class LocalOCREngine:
     def __init__(self):
-        # Initialize PaddleOCR using minimal, standard arguments
+        # Clean initialization compatible with paddlepaddle 2.5.2
         self.ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
     def extract_text_and_boxes(self, img_np: np.ndarray) -> dict:
@@ -16,8 +16,8 @@ class LocalOCREngine:
 
         if result and result[0]:
             for line in result[0]:
-                box = line[0]  # Bounding box coordinates [[x1,y1], [x2,y2], ...]
-                text, conf = line[1][0], line[1][1]  # Recognized text & probability
+                box = line[0]
+                text, conf = line[1][0], line[1][1]
                 
                 extracted_lines.append(text)
                 bounding_boxes.append({"text": text, "box": box, "confidence": round(float(conf), 2)})
