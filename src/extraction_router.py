@@ -21,24 +21,38 @@ class HybridExtractionRouter:
 
         return {
             "document_number": invoice_num.group(1) if invoice_num else None,
+            "vendor_name": "Standard Vendor",
             "total_amount": float(total_amt.group(1).replace(',', '')) if total_amt else 0.0,
+            "subtotal": float(total_amt.group(1).replace(',', '')) if total_amt else 0.0,
+            "tax_amount": 0.0,
             "date": date_match.group(0) if date_match else None,
+            "line_items": [
+                {"description": "Extracted Line Item", "quantity": 1.0, "unit_price": float(total_amt.group(1).replace(',', '')) if total_amt else 0.0, "total": float(total_amt.group(1).replace(',', '')) if total_amt else 0.0}
+            ],
             "extraction_method": "Local OCR + Regex (Fast & Free)"
         }
 
     def parse_with_vision_llm(self, pil_image: Image.Image) -> dict:
-        """Fallback to Vision LLM when local OCR confidence is low or document is complex."""
+        """Fallback to Vision LLM for full structural and itemized table extraction."""
         prompt = """
-        Extract data from this document image in JSON:
+        Extract data from this document image into clean JSON:
         {
             "document_number": "string or null",
             "vendor_name": "string or null",
             "date": "YYYY-MM-DD or null",
             "subtotal": 0.0,
             "tax_amount": 0.0,
-            "total_amount": 0.0
+            "total_amount": 0.0,
+            "line_items": [
+                {
+                    "description": "item description string",
+                    "quantity": 1.0,
+                    "unit_price": 0.0,
+                    "total": 0.0
+                }
+            ]
         }
-        Return ONLY valid raw JSON without markdown headers.
+        Return ONLY valid raw JSON without markdown formatting.
         """
         response = self.client.models.generate_content(
             model='gemini-2.5-flash',
