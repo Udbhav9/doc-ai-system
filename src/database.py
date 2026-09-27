@@ -51,9 +51,12 @@ class DocumentDatabase:
         conn.commit()
         conn.close()
 
-    def fetch_all_records(() -> pd.DataFrame:
+    def fetch_all_records(self) -> pd.DataFrame:
         """Retrieves history records as a Pandas DataFrame for Streamlit rendering."""
-        conn = sqlite3.connect("documents.db")
-        df = pd.read_sql_query("SELECT id, filename, document_number, vendor_name, total_amount, ocr_confidence, extraction_method, human_verified, created_at FROM processed_docs ORDER BY id DESC", conn)
+        conn = sqlite3.connect(self.db_path)
+        df = pd.read_sql_query(
+            "SELECT id, filename, document_number, vendor_name, total_amount, ocr_confidence, extraction_method, human_verified, created_at FROM processed_docs ORDER BY id DESC", 
+            conn
+        )
         conn.close()
         return df
